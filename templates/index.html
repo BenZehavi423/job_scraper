@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Data Scientist Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .container { max-width: 1400px; padding-top: 30px; }
+        .dashboard-header { background: linear-gradient(135deg, #0a66c2 0%, #004182 100%); color: white; padding: 2rem; border-radius: 12px 12px 0 0; margin-bottom: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .card { border: none; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .timer-badge { background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; font-weight: 500; font-size: 0.9rem; backdrop-filter: blur(5px); }
+        .btn-download { background-color: #2ecc71; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; transition: all 0.2s; }
+        .btn-download:hover { background-color: #27ae60; transform: translateY(-1px); color: white; }
+        .status-box { background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #0a66c2; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        table.dataTable thead th { background-color: #f8f9fa; border-bottom: 2px solid #e9ecef; }
+        a.job-link { text-decoration: none; color: #0a66c2; font-weight: 500; }
+        a.job-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1">🔍 Data Scientist Job Monitor</h1>
+                <p class="mb-0 opacity-75">Automated LinkedIn Extraction System</p>
+            </div>
+            <div class="text-end">
+                <div class="timer-badge">
+                    Next Update: <span id="countdown">Calculating...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-4">
+
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="status-box d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="mb-0 text-muted">Total Jobs Database</h5>
+                                <h2 class="mb-0">{{ total_jobs }}</h2>
+                            </div>
+                            <div class="text-muted small">
+                                Last Updated: {{ last_update }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-center justify-content-end">
+                        <a href="/download" class="btn btn-download">
+                            ⬇ Download Full CSV
+                        </a>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    {{ table_html|safe }}
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center text-muted mt-4 small">
+            System running on Flask & Selenium • Updates every 12 hours
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            $('.dataframe').addClass('table table-hover align-middle').DataTable({
+                "order": [[ 6, "desc" ]], // Sort by Scrape Time
+                "pageLength": 10,
+                "language": {
+                    "search": "Filter Results:"
+                }
+            });
+        });
+
+        // Countdown Timer
+        var countDownDate = new Date("{{ next_run_iso }}").getTime();
+        var x = setInterval(function() {
+            var now = new Date().getTime();
+            var distance = countDownDate - now;
+
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("countdown").innerHTML = hours + "h " + minutes + "m " + seconds + "s ";
+
+            if (distance < 0) {
+                document.getElementById("countdown").innerHTML = "RUNNING UPDATE...";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
