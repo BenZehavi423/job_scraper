@@ -124,7 +124,8 @@ def is_relevant_job(title):
         "algorithm",
         "ai engineer",
         "ai researcher",
-        "artificial intelligence"
+        "artificial intelligence",
+        "ai"
     ]
 
     # Check for inclusions
@@ -212,21 +213,37 @@ def scrape_linkedin():
                 ".job-details-jobs-unified-top-card__company-name a"  # Layout Variation 3
             ])
 
+            # Location Extraction
+            location = get_text_safely(driver, [
+                "span.topcard__flavor--bullet",
+                ".top-card-layout__first-subline .top-card-layout__entity-info:nth-child(2)",
+                ".job-details-jobs-unified-top-card__primary-description-container span:nth-child(2)",
+                "span.job-details-jobs-unified-top-card__bullet"
+            ])
+
+            if not location:
+                try:
+                    if " | " in driver.title:
+                        parts = driver.title.split(" | ")
+                        # החלק השני הוא בדרך כלל המיקום
+                        if len(parts) >= 2:
+                            potential_location = parts[1].strip()
+                            # סינון: מוודאים שזה לא "LinkedIn" או משהו גנרי
+                            if "LinkedIn" not in potential_location:
+                                location = potential_location
+                except:
+                    pass
+
+                # רק אם הכל נכשל - ברירת מחדל
+            if not location:
+                location = "Israel"
+
             if not company and " at " in driver.title:
                 # Fallback: Extract from page title "Job at Company | Location"
                 try:
                     company = driver.title.split(" at ")[1].split(" |")[0].strip()
                 except:
                     company = "Unknown Company"
-
-            if not company:
-                company = "Unknown Company"
-
-            # 3. Location Extraction
-            location = get_text_safely(driver, [
-                "span.topcard__flavor--bullet",
-                ".top-card-layout__entity-info:nth-child(2)"
-            ]) or "Israel"
 
             # Filter: Skip irrelevant jobs
             if not is_relevant_job(title):
@@ -244,7 +261,7 @@ def scrape_linkedin():
             job_record = {
                 "Job Title": title,
                 "Company Name": company,
-                "Location": "Israel",
+                "Location": location,
                 "Degree Required": insights["degree"],
                 "Years of Experience": insights["years_experience"],
                 "Link": link
