@@ -1,0 +1,30 @@
+name: ChatGPT EPL corners models
+
+on:
+  push:
+    branches:
+      - chatgpt-epl-corners-run
+    paths:
+      - 'chatgpt_epl_run/**'
+      - '.github/workflows/chatgpt-epl-corners.yml'
+  workflow_dispatch:
+
+jobs:
+  run-models:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pandas numpy scipy scikit-learn
+      - name: Run EPL corner models
+        run: python chatgpt_epl_run/run_epl_models.py
+      - name: Upload model results
+        uses: actions/upload-artifact@v4
+        with:
+          name: epl-corners-model-results
+          path: chatgpt_epl_run/results/
